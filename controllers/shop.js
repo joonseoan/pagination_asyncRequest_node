@@ -293,7 +293,17 @@ exports.getInvoice = (req, res, next) => {
       const invoiceName = 'invoice-' + orderId + '.pdf';
       const invoicePath = path.join('data', 'invoices', invoiceName);      
       const pdfDoc = new PDFDocument();
-      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+
+      // 1)
+      // created a writable data (in the pdf file) in the server side with data below
+      // pdfDoc (readable data)
+
+      // we can send this file to the client using res.send() as well but not here
+      // pdfDoc.pipe(fs.createWriteStream(invoicePath));
+
+      // On sending data with definition of "Content-Type"
+      // -------------------------------------------------------------------------------------------------------------
+      // "Setup readable streams"
       pdfDoc.fontSize(26).text('Your Invoice', {
         underline: true
       });
@@ -316,10 +326,16 @@ exports.getInvoice = (req, res, next) => {
       pdfDoc.text('------------------------------');
       pdfDoc.fontSize(20).text('Total Price: ' + totalPrice);
 
+      // to plugging in the pdf application in the user side.
       res.setHeader('Content-Type', 'application/pdf');  
       res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');    
+      
+      // 2) 
+      // send the pdfDoC data through "res" object which is wriatable *************8
+      // It is not sending the pdf file created above.
       pdfDoc.pipe(res);
       pdfDoc.end();
+      // ----------------------------------------------------------------------------------------------------------------------
     })
     .catch(err => {
       let message;
