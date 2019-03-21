@@ -21,10 +21,12 @@
                 </ul>
                 <hr>
                 <div class="centered">
-                    <form action="/create-order" method="POST">
+                    <!-- Since we are using stripe  -->
+                    <!-- <form action="/create-order" method="POST">
                         <button type="submit" class="btn">Order Now!</button>
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    </form>
+                    </form> -->
+                    <a class="btn" href="/checkout">Order Now!</a>
                 </div>
                 
             <% } else { %>

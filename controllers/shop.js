@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const stripe = require("stripe")("sk_test_d4QB0Rao9b0GTE8zOXBMrIOW00IwQk0YXo");
 
 const Product = require('../models/product');
 const Order = require('../models/order');
@@ -180,7 +181,38 @@ exports.postCartDeleteProduct = (req, res, next) => {
   });
 };
 
+exports.getCheckout = (req, res, next) => {
+  // with stripe's built-in checkout button
+  req.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      const products = user.cart.items;
+      let total = 0;
+      products.forEach(product => {
+        total += product.qty * product.productId.price;
+      })
+      res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products,
+        totalSum: total
+      });
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 5000;
+      next(error);
+    });  
+}
+
 exports.postOrder = (req, res, next) => {
+
+// Token is created using Checkout or Elements!
+// Get the payment token ID submitted by the form:
+  const token = req.body.stripeToken; // Using Express
+  let total = 0;
+
   req.user
     .populate('cart.items.productId')
     .execPopulate()
@@ -197,7 +229,21 @@ exports.postOrder = (req, res, next) => {
       });
       return order.save();
     })
-    .then(result => {
+    .then(order => {
+
+      order.products.forEach(prod => {
+        total += prod.qty * prod.product.price;
+      });
+
+      const charge = stripe.charges.create({
+        amount: total * 100,
+        currency: 'cad',
+        description: order._id.toString(),
+        source: token,
+        // we can add metadata here
+        metadata: { user_id: order.products[0].product.userId.toString() }
+      });
+      
       return req.user.clearCart();
     })
     .then(() => {

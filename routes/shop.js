@@ -19,7 +19,14 @@ router.post('/cart', isAuth, shopController.postCart);
 
 router.post('/cart-delete-item', isAuth, shopController.postCartDeleteProduct);
 
-router.post('/create-order', isAuth, shopController.postOrder);
+router.get('/checkout', isAuth, shopController.getCheckout);
+
+// In order to avoid csurf's hidden input
+//  it is required to be bounced out of the route.
+// BTW, csuft and hidden input does not supported by Stripe.
+// Therefore, we need to avoid the error caused by csurl input 
+//  which is not available.
+// router.post('/create-order', isAuth, shopController.postOrder);
 
 router.get('/orders', isAuth, shopController.getOrders);
 

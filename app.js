@@ -21,6 +21,8 @@ const flash = require('connect-flash');
 const multer = require('multer');
 
 const { get404 } = require('./controllers/error');
+const isAuth = require('./middleware/is-auth');
+const shopController = require('./controllers/shop');
 const User = require('./models/user');
 const { mongoKey } = require('./config/key' );
 
@@ -139,7 +141,7 @@ app.use(session({ secret: 'asfasdfsafdsa', resave: false, saveUninitialized: fal
 // must use after session.
 //  because csrf protection key is created after the session is create.
 // it sets up "req.csrfToken();"" like passport.js sets up req.ueser ****r
-app.use(csrfProtection);
+// app.use(csrfProtection);
 
 // It must come after the session.
 // if we want to handle session message in connect-flash
@@ -181,7 +183,11 @@ app.use((req, res, next) => {
   //  they dirctly receive the values from req.session.isAuthenticated
   //  and req.csrfToken
   res.locals.isAuthenticated = req.session.isAuthenticated;
-  res.locals.csrfToken = req.csrfToken();
+
+  // csurf error should be prevented in "/create-order" 
+  //  using Stripe who does not support csurf
+  //  which generages the error.
+  // res.locals.csrfToken = req.csrfToken();
   next();
 });
 
@@ -316,6 +322,30 @@ app.use((req, res, next) => {
 //   next();
 // });
 
+// should be located above "/"
+// Also, it should be spotted above csurf
+//  to avoid csurf error that is caused by no input of csurf 
+//  due to Stripe who does not suppor csurf.
+app.post('/create-order', isAuth, shopController.postOrder);
+
+// must use after session.
+//  because csrf protection key is created after the session is create.
+// it sets up "req.csrfToken();"" like passport.js sets up req.ueser ****
+// It is important that at that moment req.csrfToken() is created,
+// The form element in HTML must have <input type="whatever" name="_csrf" />******
+// For this reason, in order to avoid csurf error, app.use(csrfProtection) must be
+//    located here not at the top of this file. ********************************88
+
+// Also, to avoid the csurf error in "/create-order",
+//  it is required to initialize after that route above.
+app.use(csrfProtection);
+
+app.use((req, res, next) => {
+  // to aviod csurf error in "/create-order"
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -338,6 +368,11 @@ app.use(get404);
 //  in each request.
 app.use((error, req, res, next) => {
 
+  // It is a centralized error message.
+  // It is only for the developer
+  console.log(error);
+
+  // For the users
   // Bear in mind that if this code has an error,
   //  no centralized error page shows up.
 
