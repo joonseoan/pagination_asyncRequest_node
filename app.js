@@ -120,6 +120,8 @@ app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
 //  the files in the designated folder,
 //  will be automatically connected or will be returned
 //  to express server 
+
+// whenever the client requests route "http://localhost:3000/"
 app.use(express.static(path.join(__dirname, 'public')));
 
 // finding images folder directly under the root direction.
@@ -129,6 +131,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 //  because imageUrl is "product.imageUrl:  images\2019-03-19T23-49-49.544Z-lady.PNG"
 //  which is including 'images\"
 //  which indicates images\images\ folder if it is "app.use(express.static(path.join(__dirname, 'images')));"
+
+// whenever the client request route "http://localhost:3000/images/"
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // resave:false : as long as session data is not switched,

@@ -42,7 +42,6 @@ exports.postAddProduct = (req, res, next) => {
       size: 153118 }
   
   */
-
   // when jpg, png, and jpeg is not availble in the file attached
   //  this is "undefined"
   // console.log('image: ', image);
@@ -88,6 +87,7 @@ exports.postAddProduct = (req, res, next) => {
       errorMessage: errors.array()[0].msg,
       validationError: errors.array()
     });
+    
   }
 
   const product = new Product({
